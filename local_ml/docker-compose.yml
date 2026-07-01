@@ -1,37 +1,25 @@
-# docker-compose.yml
-version: '3.8' # Specify the Docker Compose file format version
+version: '3.8'
 
 services:
-  colab-runtime:
-    image: us-docker.pkg.dev/colab-images/public/runtime # The Docker image to use
-    container_name: my-colab-notebook # Optional: Assign a specific name to the container
+  gpu-notebook:
+    image: cschranz/gpu-jupyter:v1.10_cuda-12.9_ubuntu-24.04
+    container_name: gpu-notebook
 
     ports:
-      - "127.0.0.1:9000:8080" # Map host port 9000 to container port 8080 (for Jupyter/Colab interface)
+      - "127.0.0.1:9000:8888"
 
     volumes:
-      # Mount your Windows C drive to /c inside the container
-      # Ensure C: drive is shared in Docker Desktop settings
       - C:/:/c
 
-      # Optional: Mount a specific directory for your notebook files
-      # Replace "C:/Users/David/My Drive/Colab Notebooks" with the actual path to your notebooks
-      # And "/app/notebooks" with the desired path inside the container
-      # - "C:/Users/David/My Drive/Colab Notebooks":/app/notebooks
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - JUPYTER_TOKEN=localdev
 
     deploy:
       resources:
         reservations:
           devices:
-            # Configure Docker to provide GPU access
-            # This requires Docker Desktop with WSL2 GPU support configured
             - driver: nvidia
-              count: all # Request all available GPUs
-              # capabilities: [gpu] # Older syntax, 'driver: nvidia' is preferred
-
-    # Optional: Command to run when the container starts
-    # You might want to start a Jupyter notebook server or similar
-    # command: ["jupyter", "notebook", "--port=8080", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
-
-    # Optional: Working directory inside the container
-    # working_dir: /app/notebooks
+              count: all
+              capabilities: [gpu]
